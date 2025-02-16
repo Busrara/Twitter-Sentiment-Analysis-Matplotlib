@@ -1,0 +1,74 @@
+import tweepy
+from textblob import TextBlob
+import matplotlib.pyplot as plt
+
+# Twitter API credentials (Replace with your actual credentials)
+consumer_key = "YOUR-DEVELOPER-TWITTER-API-KEY"
+consumer_secret = "YOUR-DEVELOPER-TWITTER-API-KEY"
+access_token = "YOUR-DEVELOPER-TWITTER-ACCESS-TOKEN"
+access_token_secret = "YOUR-DEVELOPER-TWITTER-ACCESS-TOKEN"
+
+# Authenticate with Twitter API
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth)
+
+# Define search parameters
+search_term = "Money Heist"
+no_of_tweets = 1000
+
+# Fetch tweets
+tweets = tweepy.Cursor(api.search_tweets, q=search_term, lang="en").items(no_of_tweets)
+
+# Initialize sentiment counters
+positive = 0
+negative = 0
+neutral = 0
+polarity = 0
+
+# Sentiment analysis
+for tweet in tweets:
+    analysis = TextBlob(tweet.text)
+    polarity += analysis.sentiment.polarity
+
+    if analysis.sentiment.polarity == 0:
+        neutral += 1
+    elif analysis.sentiment.polarity < 0.00:
+        negative += 1
+    else:
+        positive += 1
+
+# Calculate percentages
+def percentage(part, whole):
+    return 100 * float(part) / float(whole)
+
+positive = percentage(positive, no_of_tweets)
+negative = percentage(negative, no_of_tweets)
+neutral = percentage(neutral, no_of_tweets)
+
+# Format to two decimal places
+positive = format(positive, '.2f')
+negative = format(negative, '.2f')
+neutral = format(neutral, '.2f')
+
+# Display sentiment analysis results
+print(f"Reaction of people on {search_term} by analyzing {no_of_tweets} Tweets:")
+if polarity == 0:
+    print("Overall Sentiment: Neutral")
+elif polarity < 0.00:
+    print("Overall Sentiment: Negative")
+else:
+    print("Overall Sentiment: Positive")
+
+# Pie chart visualization
+labels = [f'Positive [{positive}%]', f'Neutral [{neutral}%]', f'Negative [{negative}%]']
+sizes = [float(positive), float(neutral), float(negative)]
+colors = ['yellowgreen', 'gold', 'red']
+
+plt.figure(figsize=(8, 8))
+plt.pie(sizes, colors=colors, startangle=90, autopct='%1.1f%%')
+plt.legend(labels, loc="best")
+plt.title(f'Reaction to "{search_term}" by analyzing {no_of_tweets} Tweets')
+plt.axis('equal')
+plt.tight_layout()
+plt.show()
